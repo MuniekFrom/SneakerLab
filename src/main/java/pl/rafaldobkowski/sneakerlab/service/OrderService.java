@@ -7,11 +7,13 @@ import pl.rafaldobkowski.sneakerlab.dto.OrderItemRequest;
 import pl.rafaldobkowski.sneakerlab.dto.OrderRequest;
 import pl.rafaldobkowski.sneakerlab.exception.NotEnoughStockException;
 import pl.rafaldobkowski.sneakerlab.exception.ProductNotFoundException;
+import pl.rafaldobkowski.sneakerlab.model.AppUser;
 import pl.rafaldobkowski.sneakerlab.model.Order;
 import pl.rafaldobkowski.sneakerlab.model.OrderItem;
 import pl.rafaldobkowski.sneakerlab.model.Product;
 import pl.rafaldobkowski.sneakerlab.repository.OrderRepository;
 import pl.rafaldobkowski.sneakerlab.repository.ProductRepository;
+import pl.rafaldobkowski.sneakerlab.repository.UserRepository;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -23,9 +25,14 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
 
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
+    }
+
+    public List<Order> getMyOrders(String userEmail) {
+        return orderRepository.findByUser_EmailOrderByCreatedAtDesc(userEmail);
     }
 
     public Order getOrderById(Long id) {
@@ -34,12 +41,20 @@ public class OrderService {
     }
 
     @Transactional
-    public Order createOrder(OrderRequest request) {
+    public Order createOrder(OrderRequest request, String userEmail) {
         Order order = new Order();
+
+        AppUser user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Nie znaleziono użytkownika"));
+
+        order.setUser(user);
 
         order.setCustomerName(request.getCustomerName());
         order.setEmail(request.getEmail());
         order.setPhone(request.getPhone());
+        order.setAddress(request.getAddress());
+        order.setCity(request.getCity());
+        order.setPostalCode(request.getPostalCode());
 
         List<OrderItem> orderItems = new ArrayList<>();
         BigDecimal totalPrice = BigDecimal.ZERO;

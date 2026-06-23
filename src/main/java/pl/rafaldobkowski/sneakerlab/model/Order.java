@@ -1,5 +1,6 @@
 package pl.rafaldobkowski.sneakerlab.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,6 +32,18 @@ public class Order {
     private BigDecimal totalPrice;
 
     private LocalDateTime createdAt;
+
+    private String address;
+
+    private String city;
+
+    @Column(name = "postal_code")
+    private String postalCode;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonIgnore
+    private AppUser user;
 
     @Enumerated(EnumType.STRING)
     private Status status;

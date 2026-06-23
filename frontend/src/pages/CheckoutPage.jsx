@@ -1,7 +1,20 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
 
-function CheckoutPage({ cartItems, clearCart }) {
+const countryCodes = [
+    { code: "+48", country: "Polska", maxLength: 9 },
+    { code: "+49", country: "Niemcy", maxLength: 11 },
+    { code: "+44", country: "Wielka Brytania", maxLength: 10 },
+    { code: "+420", country: "Czechy", maxLength: 9 },
+    { code: "+421", country: "Słowacja", maxLength: 9 },
+    { code: "+33", country: "Francja", maxLength: 9 },
+    { code: "+34", country: "Hiszpania", maxLength: 9 },
+    { code: "+39", country: "Włochy", maxLength: 10 },
+    { code: "+31", country: "Holandia", maxLength: 9 },
+    { code: "+1", country: "USA / Kanada", maxLength: 10 }
+]
+
+function CheckoutPage({ cartItems, clearCart, user }) {
     const [loading, setLoading] = useState(false)
     const [message, setMessage] = useState("")
     const [error, setError] = useState("")
@@ -9,7 +22,8 @@ function CheckoutPage({ cartItems, clearCart }) {
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
-        email: "",
+        email: user?.email || "",
+        phonePrefix: "+48",
         phone: "",
         address: "",
         city: "",
@@ -30,18 +44,59 @@ function CheckoutPage({ cartItems, clearCart }) {
         }))
     }
 
+    function handlePhoneChange(event) {
+        const onlyNumbers = event.target.value.replace(/\D/g, "")
+
+        const selectedCountry = countryCodes.find(
+            country => country.code === formData.phonePrefix
+        )
+
+        const maxLength = selectedCountry ? selectedCountry.maxLength : 15
+
+        setFormData(previousData => ({
+            ...previousData,
+            phone: onlyNumbers.slice(0, maxLength)
+        }))
+    }
+
     async function handleOrderSubmit(event) {
         event.preventDefault()
+
+        if (!user) {
+            setError("Musisz się zalogować, aby złożyć zamówienie.")
+            return
+        }
 
         if (cartItems.length === 0) {
             setError("Koszyk jest pusty.")
             return
         }
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+        if (!emailRegex.test(formData.email)) {
+            setError("Podaj poprawny adres e-mail.")
+            return
+        }
+
+        const selectedCountry = countryCodes.find(
+            country => country.code === formData.phonePrefix
+        )
+
+        if (selectedCountry && formData.phone.length !== selectedCountry.maxLength) {
+            setError(
+                `Numer telefonu dla kraju ${selectedCountry.country} powinien mieć ${selectedCountry.maxLength} cyfr.`
+            )
+            return
+        }
+
         const orderData = {
             customerName: `${formData.firstName} ${formData.lastName}`,
             email: formData.email,
-            phone: formData.phone,
+            phone: `${formData.phonePrefix} ${formData.phone}`,
+            address: formData.address,
+            city: formData.city,
+            postalCode: formData.postalCode,
             items: cartItems.map(item => ({
                 productId: item.productId,
                 quantity: item.quantity,
@@ -59,7 +114,8 @@ function CheckoutPage({ cartItems, clearCart }) {
             const response = await fetch("http://localhost:8080/api/orders", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${user.token}`
                 },
                 body: JSON.stringify(orderData)
             })
@@ -86,6 +142,25 @@ function CheckoutPage({ cartItems, clearCart }) {
                 <Link to="/" className="checkout-back-button">
                     Wróć do sklepu
                 </Link>
+            </main>
+        )
+    }
+
+    if (!user && !message) {
+        return (
+            <main className="checkout-page">
+                <h1>Musisz się zalogować</h1>
+                <p>Aby złożyć zamówienie, zaloguj się na konto klienta.</p>
+
+                <div className="checkout-auth-actions">
+                    <Link to="/login" className="checkout-back-button">
+                        Zaloguj się
+                    </Link>
+
+                    <Link to="/register" className="checkout-register-link">
+                        Utwórz konto
+                    </Link>
+                </div>
             </main>
         )
     }
@@ -160,17 +235,33 @@ function CheckoutPage({ cartItems, clearCart }) {
                             placeholder="Adres e-mail"
                             value={formData.email}
                             onChange={handleInputChange}
+                            pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
                             required
                         />
 
-                        <input
-                            type="text"
-                            name="phone"
-                            placeholder="Telefon"
-                            value={formData.phone}
-                            onChange={handleInputChange}
-                            required
-                        />
+                        <div className="phone-row">
+                            <select
+                                name="phonePrefix"
+                                value={formData.phonePrefix}
+                                onChange={handleInputChange}
+                                required
+                            >
+                                {countryCodes.map(country => (
+                                    <option key={country.code} value={country.code}>
+                                        {country.country} {country.code}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <input
+                                type="tel"
+                                name="phone"
+                                placeholder="Numer telefonu"
+                                value={formData.phone}
+                                onChange={handlePhoneChange}
+                                required
+                            />
+                        </div>
 
                         <input
                             type="text"

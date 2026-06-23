@@ -4,6 +4,9 @@ import HomePage from "./pages/HomePage.jsx"
 import ProductDetailsPage from "./pages/ProductDetailsPage.jsx"
 import CheckoutPage from "./pages/CheckoutPage.jsx"
 import CartPanel from "./components/CartPanel.jsx"
+import LoginPage from "./pages/LoginPage.jsx"
+import RegisterPage from "./pages/RegisterPage.jsx"
+import AccountOrdersPage from "./pages/AccountOrdersPage.jsx"
 import "./App.css"
 
 function App() {
@@ -11,8 +14,13 @@ function App() {
         const savedCart = localStorage.getItem("sneakerlab_cart")
         return savedCart ? JSON.parse(savedCart) : []
     })
+    const [user, setUser] = useState(() => {
+        const savedUser = localStorage.getItem("sneakerlab_user")
+        return savedUser ? JSON.parse(savedUser) : null
+    })
 
     const [isCartOpen, setIsCartOpen] = useState(false)
+    const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false)
 
     useEffect(() => {
         localStorage.setItem("sneakerlab_cart", JSON.stringify(cartItems))
@@ -91,6 +99,16 @@ function App() {
         localStorage.removeItem("sneakerlab_cart")
     }
 
+    function handleLogin(userData) {
+        setUser(userData)
+        localStorage.setItem("sneakerlab_user", JSON.stringify(userData))
+    }
+
+    function handleLogout() {
+        setUser(null)
+        localStorage.removeItem("sneakerlab_user")
+    }
+
     return (
         <div className="app">
             <header className="navbar">
@@ -98,15 +116,91 @@ function App() {
                     Sneaker<span>Lab</span>
                 </Link>
 
-                <nav>
+                <nav className="main-nav">
                     <Link to="/">Produkty</Link>
                     <a href="#">Nowości</a>
                     <a href="#">Kontakt</a>
                 </nav>
 
-                <button className="cart-button" onClick={() => setIsCartOpen(true)}>
-                    Koszyk: {cartCount}
-                </button>
+                <div className="navbar-actions">
+                    <button className="cart-button" onClick={() => setIsCartOpen(true)}>
+                        Koszyk: {cartCount}
+                    </button>
+
+                    {user ? (
+                        <div className="account-menu">
+                            <button
+                                className="account-button"
+                                onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
+                            >
+                                Konto
+                                <span>⌄</span>
+                            </button>
+
+                            {isAccountMenuOpen && (
+                                <div className="account-dropdown">
+                                    <div className="account-dropdown-header">
+                                        <strong>
+                                            {user.role === "ADMIN" ? "Administrator" : "Klient"}
+                                        </strong>
+                                        <span>{user.email}</span>
+                                    </div>
+
+                                    {user.role === "CUSTOMER" && (
+                                        <>
+                                            <Link
+                                                to="/account/orders"
+                                                onClick={() => setIsAccountMenuOpen(false)}
+                                            >
+                                                Ostatnie zamówienia
+                                            </Link>
+
+                                            <Link
+                                                to="/account"
+                                                onClick={() => setIsAccountMenuOpen(false)}
+                                            >
+                                                Dane konta
+                                            </Link>
+                                        </>
+                                    )}
+
+                                    {user.role === "ADMIN" && (
+                                        <>
+                                            <Link
+                                                to="/admin/orders"
+                                                onClick={() => setIsAccountMenuOpen(false)}
+                                            >
+                                                Historia zamówień
+                                            </Link>
+
+                                            <Link
+                                                to="/admin/products"
+                                                onClick={() => setIsAccountMenuOpen(false)}
+                                            >
+                                                Produkty
+                                            </Link>
+                                        </>
+                                    )}
+
+                                    <button
+                                        className="dropdown-logout-button"
+                                        onClick={() => {
+                                            handleLogout()
+                                            setIsAccountMenuOpen(false)
+                                        }}
+                                    >
+                                        Wyloguj
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="auth-links">
+                            <Link to="/login">Logowanie</Link>
+                            <Link to="/register">Rejestracja</Link>
+                        </div>
+                    )}
+                </div>
             </header>
 
             <Routes>
@@ -123,8 +217,24 @@ function App() {
                         <CheckoutPage
                             cartItems={cartItems}
                             clearCart={clearCart}
+                            user={user}
                         />
                     }
+                />
+
+                <Route
+                    path="/login"
+                    element={<LoginPage onLogin={handleLogin} />}
+                />
+
+                <Route
+                    path="/register"
+                    element={<RegisterPage onLogin={handleLogin} />}
+                />
+
+                <Route
+                    path="/account/orders"
+                    element={<AccountOrdersPage user={user} />}
                 />
             </Routes>
 

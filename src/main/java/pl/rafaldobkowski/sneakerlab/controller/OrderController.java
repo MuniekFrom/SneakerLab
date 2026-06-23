@@ -1,6 +1,7 @@
 package pl.rafaldobkowski.sneakerlab.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import pl.rafaldobkowski.sneakerlab.dto.OrderRequest;
 import pl.rafaldobkowski.sneakerlab.model.Order;
@@ -21,13 +22,18 @@ public class OrderController {
         return orderService.getAllOrders();
     }
 
+    @GetMapping("/my")
+    public List<Order> getMyOrders(Authentication authentication) {
+        return orderService.getMyOrders(authentication.getName());
+    }
+
     @GetMapping("/{id}")
     public Order getOrderById(@PathVariable Long id) {
         return orderService.getOrderById(id);
     }
 
     @PostMapping
-    public Order createOrder(@RequestBody OrderRequest request) {
-        return orderService.createOrder(request);
+    public Order createOrder(@RequestBody OrderRequest request, Authentication authentication) {
+        return orderService.createOrder(request, authentication.getName());
     }
 }
