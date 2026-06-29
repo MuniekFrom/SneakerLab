@@ -14,6 +14,7 @@ import pl.rafaldobkowski.sneakerlab.model.Product;
 import pl.rafaldobkowski.sneakerlab.repository.OrderRepository;
 import pl.rafaldobkowski.sneakerlab.repository.ProductRepository;
 import pl.rafaldobkowski.sneakerlab.repository.UserRepository;
+import pl.rafaldobkowski.sneakerlab.model.Status;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -107,4 +108,15 @@ public class OrderService {
 
         return orderRepository.save(order);
     }
+
+    @Transactional
+    public Order updateOrderStatus(Long orderId, Status status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Nie znaleziono zamówienia o id: " + orderId));
+
+        order.setStatus(status);
+
+        return orderRepository.save(order);
+    }
+
 }

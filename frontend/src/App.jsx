@@ -7,6 +7,10 @@ import CartPanel from "./components/CartPanel.jsx"
 import LoginPage from "./pages/LoginPage.jsx"
 import RegisterPage from "./pages/RegisterPage.jsx"
 import AccountOrdersPage from "./pages/AccountOrdersPage.jsx"
+import AdminOrdersPage from "./pages/AdminOrdersPage.jsx";
+import AccountPage from "./pages/AccountPage.jsx"
+import AdminProductsPage from "./pages/AdminProductsPage.jsx"
+import AdminProductFormPage from "./pages/AdminProductFormPage.jsx"
 import "./App.css"
 
 function App() {
@@ -134,7 +138,6 @@ function App() {
                                 onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
                             >
                                 Konto
-                                <span>⌄</span>
                             </button>
 
                             {isAccountMenuOpen && (
@@ -235,6 +238,31 @@ function App() {
                 <Route
                     path="/account/orders"
                     element={<AccountOrdersPage user={user} />}
+                />
+
+                <Route
+                    path="/admin/orders"
+                    element={<AdminOrdersPage user={user} />}
+                />
+
+                <Route
+                    path="/account"
+                    element={<AccountPage user={user} />}
+                />
+
+                <Route
+                    path="/admin/products"
+                    element={<AdminProductsPage user={user} />}
+                />
+
+                <Route
+                    path="/admin/products/new"
+                    element={<AdminProductFormPage user={user} />}
+                />
+
+                <Route
+                    path="/admin/products/edit/:id"
+                    element={<AdminProductFormPage user={user} />}
                 />
             </Routes>
 

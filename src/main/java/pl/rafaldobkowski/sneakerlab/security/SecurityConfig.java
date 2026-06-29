@@ -33,10 +33,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        .requestMatchers(HttpMethod.GET, "/uploads/products/**").permitAll()
+
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/orders").authenticated()
 
+                        .requestMatchers(HttpMethod.POST, "/api/uploads/product-image").hasRole("ADMIN")
+
                         .requestMatchers(HttpMethod.GET, "/api/orders/my").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/me").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/orders/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/orders/**").hasRole("ADMIN")

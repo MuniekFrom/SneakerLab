@@ -1,6 +1,25 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 
+function getStatusLabel(status) {
+    switch (status) {
+        case "NEW":
+            return "Nowe"
+        case "PREPARING":
+            return "W przygotowaniu"
+        case "READY":
+            return "Gotowe"
+        case "SHIPPED":
+            return "Wysłane"
+        case "COMPLETED":
+            return "Zakończone"
+        case "CANCELLED":
+            return "Anulowane"
+        default:
+            return status
+    }
+}
+
 function AccountOrdersPage({ user }) {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
@@ -93,8 +112,8 @@ function AccountOrdersPage({ user }) {
                                     <p>{new Date(order.createdAt).toLocaleString("pl-PL")}</p>
                                 </div>
 
-                                <span className="order-status">
-                                    {order.status}
+                                <span className={`order-status status-${order.status.toLowerCase()}`}>
+                                    {getStatusLabel(order.status)}
                                 </span>
                             </div>
 

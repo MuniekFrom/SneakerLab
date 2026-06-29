@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import pl.rafaldobkowski.sneakerlab.dto.OrderRequest;
 import pl.rafaldobkowski.sneakerlab.model.Order;
 import pl.rafaldobkowski.sneakerlab.service.OrderService;
+import pl.rafaldobkowski.sneakerlab.dto.OrderStatusUpdateRequest;
 
 import java.util.List;
 
@@ -35,5 +36,13 @@ public class OrderController {
     @PostMapping
     public Order createOrder(@RequestBody OrderRequest request, Authentication authentication) {
         return orderService.createOrder(request, authentication.getName());
+    }
+
+    @PutMapping("/{id}/status")
+    public Order updateOrderStatus(
+            @PathVariable Long id,
+            @RequestBody OrderStatusUpdateRequest request
+    ) {
+        return orderService.updateOrderStatus(id, request.getStatus());
     }
 }
