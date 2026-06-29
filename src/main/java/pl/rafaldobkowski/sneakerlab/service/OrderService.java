@@ -15,6 +15,7 @@ import pl.rafaldobkowski.sneakerlab.repository.OrderRepository;
 import pl.rafaldobkowski.sneakerlab.repository.ProductRepository;
 import pl.rafaldobkowski.sneakerlab.repository.UserRepository;
 import pl.rafaldobkowski.sneakerlab.model.Status;
+import pl.rafaldobkowski.sneakerlab.model.ProductSize;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -82,11 +83,31 @@ public class OrderService {
                 throw new RuntimeException("Wybrany rozmiar nie jest dostępny dla produktu: " + product.getName());
             }
 
-            if (product.getStockQuantity() < itemRequest.getQuantity()) {
-                throw new NotEnoughStockException(product.getName());
+            ProductSize selectedProductSize = product.getSizes()
+                    .stream()
+                    .filter(size -> size.getSizeNumber().equals(itemRequest.getSelectedSize()))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Wybrany rozmiar nie istnieje dla produktu: " + product.getName()));
+
+            if (selectedProductSize.getStockQuantity() < itemRequest.getQuantity()) {
+                throw new RuntimeException(
+                        "Brak wystarczającej ilości produktu "
+                                + product.getName()
+                                + " w rozmiarze "
+                                + itemRequest.getSelectedSize()
+                );
             }
 
-            product.setStockQuantity(product.getStockQuantity() - itemRequest.getQuantity());
+            selectedProductSize.setStockQuantity(
+                    selectedProductSize.getStockQuantity() - itemRequest.getQuantity()
+            );
+
+            int totalStock = product.getSizes()
+                    .stream()
+                    .mapToInt(ProductSize::getStockQuantity)
+                    .sum();
+
+            product.setStockQuantity(totalStock);
 
             BigDecimal itemTotalPrice = product.getPrice()
                     .multiply(BigDecimal.valueOf(itemRequest.getQuantity()));

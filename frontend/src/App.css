@@ -2331,3 +2331,20 @@ img {
     background: #f6f6f6;
     cursor: pointer;
 }
+
+.size-options button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    background: #eeeeee;
+    color: #999;
+}
+
+.selected-size-stock {
+    margin-top: 14px;
+    font-weight: 700;
+    color: #333;
+}
+
+.selected-size-stock strong {
+    color: #111;
+}

@@ -1,6 +1,18 @@
 import { useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 
+function getImageSrc(imageUrl) {
+    if (!imageUrl) {
+        return ""
+    }
+
+    if (imageUrl.startsWith("/uploads")) {
+        return `http://localhost:8080${imageUrl}`
+    }
+
+    return imageUrl
+}
+
 function ProductDetailsPage({ addToCart }) {
     const { id } = useParams()
 
@@ -54,6 +66,56 @@ function ProductDetailsPage({ addToCart }) {
             ? product.imageUrls
             : [product.imageUrl]
 
+    const productSizes =
+        product.sizes && product.sizes.length > 0
+            ? product.sizes
+            : product.availableSizes && product.availableSizes.length > 0
+                ? product.availableSizes.map(size => ({
+                    id: size,
+                    sizeNumber: size,
+                    stockQuantity: null
+                }))
+                : []
+
+    function getSelectedSizeStock() {
+        if (!selectedSize || !productSizes || productSizes.length === 0) {
+            return null
+        }
+
+        const selectedSizeData = productSizes.find(
+            size => Number(size.sizeNumber) === Number(selectedSize)
+        )
+
+        if (!selectedSizeData || selectedSizeData.stockQuantity === null || selectedSizeData.stockQuantity === undefined) {
+            return null
+        }
+
+        return Number(selectedSizeData.stockQuantity)
+    }
+
+    function handleAddToCart() {
+        if (!selectedSize) {
+            alert("Wybierz rozmiar produktu.")
+            return
+        }
+
+        const selectedSizeData = productSizes.find(
+            size => Number(size.sizeNumber) === Number(selectedSize)
+        )
+
+        if (
+            selectedSizeData &&
+            selectedSizeData.stockQuantity !== null &&
+            selectedSizeData.stockQuantity !== undefined &&
+            Number(selectedSizeData.stockQuantity) <= 0
+        ) {
+            alert("Ten rozmiar jest niedostępny.")
+            return
+        }
+
+        addToCart(product, selectedSize)
+    }
+
     return (
         <main className="details-page">
             <Link className="back-link" to="/">
@@ -63,7 +125,7 @@ function ProductDetailsPage({ addToCart }) {
             <section className="details-layout">
                 <div className="details-gallery">
                     <div className="main-product-image">
-                        <img src={selectedImage} alt={product.name} />
+                        <img src={getImageSrc(selectedImage)} alt={product.name} />
                     </div>
 
                     <div className="thumbnail-list">
@@ -73,7 +135,7 @@ function ProductDetailsPage({ addToCart }) {
                                 className={selectedImage === imageUrl ? "thumbnail active" : "thumbnail"}
                                 onClick={() => setSelectedImage(imageUrl)}
                             >
-                                <img src={imageUrl} alt={`${product.name} ${index + 1}`} />
+                                <img src={getImageSrc(imageUrl)} alt={`${product.name} ${index + 1}`} />
                             </button>
                         ))}
                     </div>
@@ -87,7 +149,7 @@ function ProductDetailsPage({ addToCart }) {
                     <p className="details-brand">{product.brand}</p>
 
                     <strong className="details-price">
-                        {product.price} zł
+                        {Number(product.price).toFixed(2)} zł
                     </strong>
 
                     <p className="details-description">
@@ -96,8 +158,15 @@ function ProductDetailsPage({ addToCart }) {
 
                     <div className="details-params">
                         <div>
-                            <span>Dostępność</span>
-                            <strong>{product.stockQuantity} szt.</strong>
+                            <span>
+                                {selectedSize ? `Dostępność rozmiaru ${selectedSize}` : "Dostępność"}
+                            </span>
+
+                            <strong>
+                                {selectedSize && getSelectedSizeStock() !== null
+                                    ? `${getSelectedSizeStock()} szt.`
+                                    : `${product.stockQuantity} szt.`}
+                            </strong>
                         </div>
 
                         <div>
@@ -115,25 +184,38 @@ function ProductDetailsPage({ addToCart }) {
                         <h3>Wybierz rozmiar</h3>
 
                         <div className="sizes-grid">
-                            {product.availableSizes && product.availableSizes.length > 0 ? (
-                                product.availableSizes.map(size => (
-                                    <button
-                                        key={size}
-                                        className={selectedSize === size ? "size-button active" : "size-button"}
-                                        onClick={() => setSelectedSize(size)}
-                                    >
-                                        {size}
-                                    </button>
-                                ))
+                            {productSizes.length > 0 ? (
+                                productSizes.map(size => {
+                                    const isUnavailable =
+                                        size.stockQuantity !== null &&
+                                        size.stockQuantity !== undefined &&
+                                        Number(size.stockQuantity) <= 0
+
+                                    return (
+                                        <button
+                                            key={size.id || size.sizeNumber}
+                                            className={
+                                                Number(selectedSize) === Number(size.sizeNumber)
+                                                    ? "size-button active"
+                                                    : "size-button"
+                                            }
+                                            disabled={isUnavailable}
+                                            onClick={() => setSelectedSize(size.sizeNumber)}
+                                        >
+                                            {size.sizeNumber}
+                                        </button>
+                                    )
+                                })
                             ) : (
                                 <p>Brak rozmiarów dla tego produktu.</p>
                             )}
                         </div>
+                        
                     </div>
 
                     <button
                         className="add-cart-details-button"
-                        onClick={() => addToCart(product, selectedSize)}
+                        onClick={handleAddToCart}
                     >
                         Dodaj do koszyka
                     </button>

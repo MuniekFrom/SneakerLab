@@ -5,10 +5,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import pl.rafaldobkowski.sneakerlab.model.Product;
+import pl.rafaldobkowski.sneakerlab.model.ProductSize;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Getter
@@ -28,6 +30,7 @@ public class ProductDetailResponse {
     private LocalDateTime createdAt;
     private List<String> imageUrls;
     private List<Integer> availableSizes;
+    private List<ProductSizeResponse> sizes;
 
     public static ProductDetailResponse fromProduct(Product product) {
         List<String> imageUrls = new ArrayList<>();
@@ -42,11 +45,23 @@ public class ProductDetailResponse {
         }
 
         List<Integer> availableSizes = new ArrayList<>();
+        List<ProductSizeResponse> sizes = new ArrayList<>();
 
         if (product.getSizes() != null) {
             availableSizes = product.getSizes()
                     .stream()
-                    .map(size -> size.getSizeNumber())
+                    .sorted(Comparator.comparing(ProductSize::getSizeNumber))
+                    .map(ProductSize::getSizeNumber)
+                    .toList();
+
+            sizes = product.getSizes()
+                    .stream()
+                    .sorted(Comparator.comparing(ProductSize::getSizeNumber))
+                    .map(size -> new ProductSizeResponse(
+                            size.getId(),
+                            size.getSizeNumber(),
+                            size.getStockQuantity()
+                    ))
                     .toList();
         }
 
@@ -67,7 +82,8 @@ public class ProductDetailResponse {
                 product.getStockQuantity(),
                 product.getCreatedAt(),
                 imageUrls,
-                availableSizes
+                availableSizes,
+                sizes
         );
     }
 }

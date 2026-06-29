@@ -21,6 +21,9 @@ public class ProductSize {
 
     private Integer sizeNumber;
 
+    @Column(nullable = false)
+    private Integer stockQuantity = 0;
+
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "product_id")
